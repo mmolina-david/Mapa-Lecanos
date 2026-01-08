@@ -17,19 +17,37 @@
   <div id="map"></div>
 
   <script>
-    // 1) Crea el mapa
+    // 1) Crea el mapa (CAMBIO: fondo satélite)
     const map = new maplibregl.Map({
       container: 'map',
-      style: 'https://demotiles.maplibre.org/style.json',
+      style: {
+        "version": 8,
+        "sources": {
+          "satellite": {
+            "type": "raster",
+            "tiles": [
+              "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+            ],
+            "tileSize": 256
+          }
+        },
+        "layers": [
+          {
+            "id": "satellite",
+            "type": "raster",
+            "source": "satellite"
+          }
+        ]
+      },
       center: [2.1734, 41.3851], // Barcelona (cámbialo)
       zoom: 10
     });
 
-    // 2) Cuando cargue, añade tu GeoJSON como fuente y capa
+    // 2) Cuando cargue, añade tu GeoJSON como fuente y capa (SIN CAMBIOS)
     map.on('load', async () => {
       map.addSource('puntos', {
         type: 'geojson',
-        data: './data/muestra.geojson'
+        data: './data/muestra_wgs.geojson'
       });
 
       map.addLayer({
