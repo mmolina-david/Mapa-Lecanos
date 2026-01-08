@@ -39,8 +39,6 @@
           }
         ]
       },
-      center: [2.1734, 41.3851], // Barcelona (cámbialo)
-      zoom: 10
     });
 
     // 2) Cuando cargue, añade tu GeoJSON como fuente y capa (SIN CAMBIOS)
@@ -49,7 +47,23 @@
         type: 'geojson',
         data: './data/muestra_wgs.geojson'
       });
-
+      // Centrar el mapa en la extensión de la capa
+      const response = await fetch('./data/muestra_wgs.geojson');
+      const geojson = await response.json();
+      
+      const bounds = new maplibregl.LngLatBounds();
+      
+      geojson.features.forEach(f => {
+        if (f.geometry && f.geometry.type === 'Point') {
+          bounds.extend(f.geometry.coordinates);
+        }
+      });
+      
+      // Ajusta la vista al contenido
+      map.fitBounds(bounds, {
+        padding: 40,
+        maxZoom: 16
+      });
       map.addLayer({
         id: 'puntos-layer',
         type: 'circle',
