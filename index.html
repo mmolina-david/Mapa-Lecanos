@@ -187,21 +187,22 @@
       }
 
       function applyClassFilter() {
-        const selected = selectedClasses();
+  const selected = selectedClasses();
 
-        // Si no hay ninguna seleccionada, ocultamos toda la capa
-        if (selected.length === 0) {
-          map.setFilter('puntos-layer', ['==', 1, 0]); // siempre falso
-          return;
-        }
+  // Si no hay ninguna seleccionada: apaga la capa (lo más fiable)
+  if (selected.length === 0) {
+    map.setLayoutProperty('puntos-layer', 'visibility', 'none');
+    return;
+  }
 
-        // Filtra por n_afeccion ∈ selected
-        map.setFilter('puntos-layer', [
-          'in',
-          ['to-number', ['get', 'n_afeccion']],
-          ['literal', selected]
-        ]);
-      }
+  // Si hay alguna seleccionada: enciende capa y filtra
+  map.setLayoutProperty('puntos-layer', 'visibility', 'visible');
+  map.setFilter('puntos-layer', [
+    'in',
+    ['to-number', ['get', 'n_afeccion']],
+    ['literal', selected]
+  ]);
+}
 
       toggles.forEach(cb => cb.addEventListener('change', applyClassFilter));
 
