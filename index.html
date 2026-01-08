@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mapa prueba - MapLibre</title>
+
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; }
+    #map { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    // 1) Crea el mapa
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: 'https://demotiles.maplibre.org/style.json',
+      center: [2.1734, 41.3851], // Barcelona (cámbialo)
+      zoom: 10
+    });
+
+    // 2) Cuando cargue, añade tu GeoJSON como fuente y capa
+    map.on('load', async () => {
+      map.addSource('puntos', {
+        type: 'geojson',
+        data: './data/puntos.geojson'
+      });
+
+      map.addLayer({
+        id: 'puntos-layer',
+        type: 'circle',
+        source: 'puntos',
+        paint: {
+          'circle-radius': 4,
+          'circle-opacity': 0.8
+        }
+      });
+    });
+  </script>
+</body>
+</html>
