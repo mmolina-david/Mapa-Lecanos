@@ -17,7 +17,7 @@
   <div id="map"></div>
 
   <script>
-    // 1) Crea el mapa (CAMBIO: fondo satélite)
+    // 1) Crea el mapa (fondo satélite) + center/zoom iniciales (necesarios)
     const map = new maplibregl.Map({
       container: 'map',
       style: {
@@ -32,58 +32,56 @@
           }
         },
         "layers": [
-          {
-            "id": "satellite",
-            "type": "raster",
-            "source": "satellite"
-          }
+          { "id": "satellite", "type": "raster", "source": "satellite" }
         ]
       },
+      center: [0, 0],
+      zoom: 2
     });
 
-    // 2) Cuando cargue, añade tu GeoJSON como fuente y capa (SIN CAMBIOS)
     map.on('load', async () => {
+      const url = './data/muestra_wgs.geojson';
+
       map.addSource('puntos', {
         type: 'geojson',
-        data: './data/muestra_wgs.geojson'
+        data: url
       });
+
       // Centrar el mapa en la extensión de la capa
-      const response = await fetch('./data/muestra_wgs.geojson');
+      const response = await fetch(url);
       const geojson = await response.json();
-      
+
       const bounds = new maplibregl.LngLatBounds();
-      
       geojson.features.forEach(f => {
         if (f.geometry && f.geometry.type === 'Point') {
           bounds.extend(f.geometry.coordinates);
         }
       });
-      
-      // Ajusta la vista al contenido
-      map.fitBounds(bounds, {
-        padding: 40,
-        maxZoom: 16
-      });
+
+      map.fitBounds(bounds, { padding: 40, maxZoom: 16 });
+
       map.addLayer({
         id: 'puntos-layer',
         type: 'circle',
         source: 'puntos',
         paint: {
-  'circle-radius': 6,
-  'circle-opacity': 1,
-  'circle-stroke-width': 0.5,
-  'circle-stroke-color': '#ffffff',
+          'circle-radius': 6,
+          'circle-opacity': 1,
 
-  'circle-color': [
-    'match',
-    ['get', 'n_afeccion'],
-    0.0, '#a6d96a',
-    1.0, '#ffffc0',
-    2.0, '#fdae61',
-    3.0, '#d7191c',
-    '#999999' // color por defecto si aparece otro valor
-  ]
-}
+          // Si quieres fidelidad de color, quita el borde o usa negro.
+          'circle-stroke-width': 0.5,
+          'circle-stroke-color': '#000000',
+
+          'circle-color': [
+            'match',
+            ['to-number', ['get', 'n_afeccion']],
+            0, '#a6d96a',
+            1, '#ffffc0',
+            2, '#fdae61',
+            3, '#d7191c',
+            '#999999'
+          ]
+        }
       });
     });
   </script>
