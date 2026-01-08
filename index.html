@@ -55,9 +55,21 @@
         type: 'circle',
         source: 'puntos',
         paint: {
-          'circle-radius': 4,
-          'circle-opacity': 0.8
-        }
+  'circle-radius': 6,
+  'circle-opacity': 0.85,
+  'circle-stroke-width': 1,
+  'circle-stroke-color': '#ffffff',
+
+  'circle-color': [
+    'match',
+    ['get', 'n'],
+    0, '#1a9850',
+    1, '#c0d87d',
+    2, '#d9a33b',
+    3, '#8c510a',
+    '#999999' // color por defecto si aparece otro valor
+  ]
+}
       });
     });
   </script>
