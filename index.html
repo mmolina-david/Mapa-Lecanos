@@ -119,8 +119,11 @@
         "sources": {
           "satellite": {
             "type": "raster",
+            // WMS (geoEuskadi) como tiles, al estilo del ejemplo oficial de MapLibre:
+            // - Usamos WMS 1.1.1 + SRS=EPSG:3857 + bbox-epsg-3857 (sin lío de ejes de WMS 1.3.0)
+            // - Capa 2018: ORTOARGAZKIAK_82
             "tiles": [
-              "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+              "https://www.geo.euskadi.eus/WMS_ORTOARGAZKIAK?service=WMS&request=GetMap&version=1.1.1&layers=ORTOARGAZKIAK_82&styles=default&format=image/png&transparent=false&srs=EPSG:3857&bbox={bbox-epsg-3857}&width=256&height=256"
             ],
             "tileSize": 256
           }
@@ -187,22 +190,22 @@
       }
 
       function applyClassFilter() {
-  const selected = selectedClasses();
+        const selected = selectedClasses();
 
-  // Si no hay ninguna seleccionada: apaga la capa (lo más fiable)
-  if (selected.length === 0) {
-    map.setLayoutProperty('puntos-layer', 'visibility', 'none');
-    return;
-  }
+        // Si no hay ninguna seleccionada: apaga la capa (lo más fiable)
+        if (selected.length === 0) {
+          map.setLayoutProperty('puntos-layer', 'visibility', 'none');
+          return;
+        }
 
-  // Si hay alguna seleccionada: enciende capa y filtra
-  map.setLayoutProperty('puntos-layer', 'visibility', 'visible');
-  map.setFilter('puntos-layer', [
-    'in',
-    ['to-number', ['get', 'n_afeccion']],
-    ['literal', selected]
-  ]);
-}
+        // Si hay alguna seleccionada: enciende capa y filtra
+        map.setLayoutProperty('puntos-layer', 'visibility', 'visible');
+        map.setFilter('puntos-layer', [
+          'in',
+          ['to-number', ['get', 'n_afeccion']],
+          ['literal', selected]
+        ]);
+      }
 
       toggles.forEach(cb => cb.addEventListener('change', applyClassFilter));
 
