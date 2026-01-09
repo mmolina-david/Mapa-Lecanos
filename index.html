@@ -119,11 +119,18 @@
         "sources": {
           "satellite": {
             "type": "raster",
-            // WMS (geoEuskadi) como tiles, al estilo del ejemplo oficial de MapLibre:
-            // - Usamos WMS 1.1.1 + SRS=EPSG:3857 + bbox-epsg-3857 (sin lío de ejes de WMS 1.3.0)
-            // - Capa 2018: ORTOARGAZKIAK_82
             "tiles": [
-              "https://www.geo.euskadi.eus/WMS_ORTOARGAZKIAK?service=WMS&request=GetMap&version=1.1.1&layers=ORTOARGAZKIAK_82&styles=default&format=image/png&transparent=false&srs=EPSG:3857&bbox={bbox-epsg-4326}&width=256&height=256"
+              // WMS geoEuskadi - Ortofoto 2018 (según tu capa/identificador)
+              // CRS=EPSG:25830 + BBOX fijo (PRUEBA)
+              "https://www.geo.euskadi.eus/WMS_ORTOARGAZKIAK" +
+              "?service=WMS&request=GetMap&version=1.3.0" +
+              "&layers=ORTOARGAZKIAK_82" +
+              "&STYLES=default" +
+              "&format=image/png" +
+              "&TRANSPARENT=false" +
+              "&CRS=EPSG:25830" +
+              "&BBOX=456656,4696226,608994,4821706" +
+              "&WIDTH=256&HEIGHT=256"
             ],
             "tileSize": 256
           }
