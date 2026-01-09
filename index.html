@@ -311,31 +311,39 @@
     }
 
     function setBasemapYear(year) {
-      selectedYear = year;
-      updateBasemapUI(year);
+  selectedYear = year;
+  updateBasemapUI(year);
 
-      const tiles = [wmsTileUrlForYear(year)];
+  const tiles = [wmsTileUrlForYear(year)];
 
-      // Si el source soporta setTiles, lo usamos (si no, fallback)
-      const src = map.getSource('satellite');
-      if (src && typeof src.setTiles === 'function') {
-        src.setTiles(tiles);
-        return;
-      }
-
-      // Fallback robusto: re-crear SOLO el fondo (sin tocar puntos)
-      if (map.getLayer('satellite')) map.removeLayer('satellite');
-      if (map.getSource('satellite')) map.removeSource('satellite');
-
-      map.addSource('satellite', { type: 'raster', tiles, tileSize: 256 });
-
-      // Si ya existe la capa de puntos, metemos el fondo por debajo
-      if (map.getLayer('puntos-layer')) {
-        map.addLayer({ id: 'satellite', type: 'raster', source: 'satellite' }, 'puntos-layer');
-      } else {
-        map.addLayer({ id: 'satellite', type: 'raster', source: 'satellite' });
-      }
+  const src = map.getSource('satellite');
+  if (src && typeof src.setTiles === 'function') {
+    src.setTiles(tiles);
+    // Asegura puntos por delante
+    if (map.getLayer('puntos-layer')) {
+      try { map.moveLayer('puntos-layer'); } catch (_) {}
     }
+    return;
+  }
+
+  // Fallback robusto: re-crear SOLO el fondo (sin tocar puntos)
+  if (map.getLayer('satellite')) map.removeLayer('satellite');
+  if (map.getSource('satellite')) map.removeSource('satellite');
+
+  map.addSource('satellite', { type: 'raster', tiles, tileSize: 256 });
+
+  // SI existen puntos, mete el WMS debajo (antes) de puntos-layer
+  if (map.getLayer('puntos-layer')) {
+    map.addLayer(
+      { id: 'satellite', type: 'raster', source: 'satellite' },
+      'puntos-layer'
+    );
+    // y por si acaso, fuerza puntos arriba
+    try { map.moveLayer('puntos-layer'); } catch (_) {}
+  } else {
+    map.addLayer({ id: 'satellite', type: 'raster', source: 'satellite' });
+  }
+}
 
     function renderBasemapOptions() {
       bmOptions.innerHTML = '';
