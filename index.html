@@ -243,10 +243,9 @@
     // =========================
     // CONFIG (selector orto)
     // =========================
-    const LOGO_URL = './data/geoeuskadi.png'; // <-- cambia el nombre si tu logo se llama distinto
+    const LOGO_URL = './data/logo.png'; // <-- cambia el nombre si tu logo se llama distinto
 
     // Solo RGB (no IrRG). Capas geoeuskadi: ORTO_YYYY
-    // (Puedes añadir/quitar años aquí según te interese)
     const ORTO_YEARS = [
       2024, 2023, 2022, 2021, 2020, 2019, 2018,
       2017, 2016, 2015, 2014, 2013, 2012, 2011,
@@ -257,7 +256,6 @@
     const DEFAULT_YEAR = 2018;
 
     function wmsTileUrlForYear(year) {
-      // WMS 1.3.0 + EPSG:3857 (bbox placeholder soportado por MapLibre)
       return "https://www.geo.euskadi.eus/WMS_ORTOARGAZKIAK" +
         "?service=WMS&request=GetMap&version=1.3.0" +
         "&layers=ORTO_" + year +
@@ -270,7 +268,7 @@
     }
 
     // =========================
-    // 1) Crea el mapa (fondo WMS) + center/zoom iniciales
+    // MAPA (fondo WMS 2018 por defecto)
     // =========================
     const map = new maplibregl.Map({
       container: 'map',
@@ -303,26 +301,29 @@
     bmLogo.src = LOGO_URL;
 
     let selectedYear = DEFAULT_YEAR;
+    bmYearLabel.textContent = String(selectedYear);
 
-    function setBasemapYear(year) {
-      selectedYear = year;
+    function updateBasemapUI(year) {
       bmYearLabel.textContent = String(year);
-
-      // Marcar activo en el listado
       Array.from(bmOptions.querySelectorAll('.bm-option')).forEach(btn => {
         btn.classList.toggle('active', Number(btn.dataset.year) === year);
       });
+    }
+
+    function setBasemapYear(year) {
+      selectedYear = year;
+      updateBasemapUI(year);
 
       const tiles = [wmsTileUrlForYear(year)];
 
-      // Intento 1: si el source soporta setTiles (algunas builds lo traen)
+      // Si el source soporta setTiles, lo usamos (si no, fallback)
       const src = map.getSource('satellite');
       if (src && typeof src.setTiles === 'function') {
         src.setTiles(tiles);
         return;
       }
 
-      // Fallback robusto: re-crear source/layer (manteniendo puntos encima)
+      // Fallback robusto: re-crear SOLO el fondo (sin tocar puntos)
       if (map.getLayer('satellite')) map.removeLayer('satellite');
       if (map.getSource('satellite')) map.removeSource('satellite');
 
@@ -370,18 +371,16 @@
       toggleBasemapPanel();
     });
 
-    // Cerrar al hacer click fuera + ESC
     document.addEventListener('click', () => closeBasemapPanel());
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeBasemapPanel();
     });
 
-    // Construye listado + estado inicial
     renderBasemapOptions();
-    setBasemapYear(DEFAULT_YEAR);
+    updateBasemapUI(DEFAULT_YEAR); // OJO: NO tocamos el mapa aquí
 
     // =========================
-    // Tu lógica original (sin tocar)
+    // Tu lógica original (sin romper el load)
     // =========================
     map.on('load', async () => {
       const url = './data/muestra_wgs.geojson';
@@ -439,13 +438,11 @@
       function applyClassFilter() {
         const selected = selectedClasses();
 
-        // Si no hay ninguna seleccionada: apaga la capa (lo más fiable)
         if (selected.length === 0) {
           map.setLayoutProperty('puntos-layer', 'visibility', 'none');
           return;
         }
 
-        // Si hay alguna seleccionada: enciende capa y filtra
         map.setLayoutProperty('puntos-layer', 'visibility', 'visible');
         map.setFilter('puntos-layer', [
           'in',
@@ -466,12 +463,17 @@
         applyClassFilter();
       });
 
-      // Aplica filtro inicial (todas activas)
       applyClassFilter();
 
-      // Asegura que el fondo sigue por debajo de puntos tras cargar todo (por si acaso)
+      // Garantiza que el fondo quede debajo
       if (map.getLayer('satellite') && map.getLayer('puntos-layer')) {
         try { map.moveLayer('satellite', 'puntos-layer'); } catch (_) {}
+      }
+
+      // Si por algún motivo ya habías seleccionado otro año antes de cargar (raro),
+      // aplica el WMS elegido ahora que el mapa ya está listo.
+      if (selectedYear !== DEFAULT_YEAR) {
+        setBasemapYear(selectedYear);
       }
     });
   </script>
