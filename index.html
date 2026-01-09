@@ -13,16 +13,17 @@
     #map { width: 100%; height: 100%; }
 
     /* =========================
-       Panel único (3 elementos juntos, mismo ancho, sin huecos)
+       Panel único (mismo ancho)
+       Orden: Satellite -> Leyenda -> Scrollbar
        ========================= */
     #uiPanel {
       position: absolute;
       left: 30px;
       bottom: 30px;
-      z-index: 20;
+      z-index: 30;
       font-family: sans-serif;
       user-select: none;
-      width: 290px;               /* <- ancho único para todo */
+      width: 290px;
     }
 
     .panel-wrap {
@@ -30,7 +31,7 @@
       background: rgba(255,255,255,0.92);
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.22);
-      overflow: hidden;           /* <- evita ver mapa entre secciones */
+      overflow: hidden; /* sin “huecos” */
     }
 
     .panel-section {
@@ -41,15 +42,18 @@
     .panel-section:last-child { border-bottom: 0; }
 
     /* =========================
-       Pestaña toggle (in/out)
+       Toggle a la DERECHA del bloque
+       - Abierto: pegado a la derecha del panel
+       - Cerrado: queda en el margen, bien visible, sin irse al borde inferior
        ========================= */
     #panelToggle {
       position: absolute;
-      left: -18px;
-      top: 14px;
+      right: -18px;
+      top: 50%;
+      transform: translateY(-50%);
       width: 18px;
-      height: 44px;
-      border-radius: 10px 0 0 10px;
+      height: 56px;
+      border-radius: 0 10px 10px 0;
       background: rgba(255,255,255,0.92);
       box-shadow: 0 0 10px rgba(0,0,0,0.18);
       display: flex;
@@ -57,7 +61,8 @@
       justify-content: center;
       cursor: pointer;
       border: 1px solid rgba(0,0,0,0.10);
-      border-right: 0;
+      border-left: 0;
+      z-index: 31;
     }
     #panelToggle span {
       font-size: 14px;
@@ -65,14 +70,28 @@
       line-height: 1;
     }
 
-    .collapsed .panel-content { display: none; }
-    .collapsed { width: 0; }
-    .collapsed .panel-wrap {
+    /* Plegado: ocultamos el contenido, pero dejamos el toggle visible
+       y lo colocamos “en el margen” (a la izquierda de donde estaba el panel). */
+    #uiPanel.collapsed {
       width: 0;
-      padding: 0;
-      overflow: visible;
+    }
+    #uiPanel.collapsed .panel-wrap {
+      width: 0;
       background: transparent;
       box-shadow: none;
+      overflow: visible;
+    }
+    #uiPanel.collapsed .panel-content {
+      display: none;
+    }
+    #uiPanel.collapsed #panelToggle {
+      right: auto;
+      left: -18px;          /* queda en el margen izquierdo del “anclaje” */
+      top: 50%;
+      transform: translateY(-50%);
+      border-radius: 10px 0 0 10px;
+      border-left: 1px solid rgba(0,0,0,0.10);
+      border-right: 0;
     }
 
     /* =========================
@@ -166,30 +185,6 @@
     }
 
     /* =========================
-       Barra horizontal de años (temática)
-       ========================= */
-    .year-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    #yearLabel {
-      font-weight: 700;
-      font-size: 13px;
-      white-space: nowrap;
-    }
-    #yearSlider {
-      width: 100%;
-    }
-    .year-hint {
-      font-size: 11px;
-      opacity: 0.7;
-      margin-top: 6px;
-      line-height: 1.2;
-    }
-
-    /* =========================
        Leyenda + filtros
        ========================= */
     .legend-title {
@@ -232,7 +227,33 @@
     }
 
     /* =========================
-       Modal "versión de prueba"
+       Scrollbar horizontal (año MFV) debajo de la leyenda
+       ========================= */
+    .year-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    #yearLabel {
+      font-weight: 700;
+      font-size: 13px;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+    #yearSlider {
+      width: 100%;
+      flex: 1 1 auto;
+    }
+    .year-hint {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-top: 6px;
+      line-height: 1.2;
+    }
+
+    /* =========================
+       Modal inicial
        ========================= */
     #modalOverlay {
       position: absolute;
@@ -291,12 +312,12 @@
 
   <!-- Panel UI único -->
   <div id="uiPanel">
-    <div id="panelToggle" title="Ocultar/mostrar panel"><span id="toggleIcon">❮</span></div>
+    <div id="panelToggle" title="Ocultar/mostrar panel"><span id="toggleIcon">❯</span></div>
 
     <div class="panel-wrap">
       <div class="panel-content">
 
-        <!-- Sección 1: Selector orto -->
+        <!-- 1) Satellite selector -->
         <div class="panel-section">
           <button id="bmBtn" class="bm-button" type="button" aria-haspopup="listbox" aria-expanded="false">
             <img id="bmLogo" class="bm-logo" alt="geoEuskadi" />
@@ -313,16 +334,7 @@
           </div>
         </div>
 
-        <!-- Sección 2: Año temático (barra horizontal) -->
-        <div class="panel-section">
-          <div class="year-row">
-            <div id="yearLabel">2018</div>
-            <input id="yearSlider" type="range" min="0" max="0" step="1" value="0" />
-          </div>
-          <div class="year-hint">Año MFV (cambia el campo y_YYYY)</div>
-        </div>
-
-        <!-- Sección 3: Leyenda -->
+        <!-- 2) Leyenda -->
         <div class="panel-section">
           <div class="legend-title">
             <span>Nivel de afección</span>
@@ -365,6 +377,15 @@
           </label>
         </div>
 
+        <!-- 3) Scrollbar MFV -->
+        <div class="panel-section">
+          <div class="year-row">
+            <div id="yearLabel">2018</div>
+            <input id="yearSlider" type="range" min="0" max="0" step="1" value="0" />
+          </div>
+          <div class="year-hint">Año MFV (cambia el campo y_YYYY)</div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -380,11 +401,11 @@
     const DEFAULT_YEAR = 2018;
     const YEAR_FIELD_PREFIX = 'y_';
 
-    // GeoJSON polígonos (única capa en esta versión)
+    // GeoJSON polígonos (única capa)
     const ZOOMOUT_URL = './data/mfv_zoomout.geojson';
 
-    // A partir de este zoom “vacía” el color (pero sigue borde)
-    const COLOR_FADE_ZOOM = 13;
+    // Umbral de “pérdida de relleno” como la versión anterior
+    const DETAIL_ZOOM = 13;
 
     const CLASS_COLORS = {
       0: '#a6d96a',
@@ -420,7 +441,6 @@
     // =========================
     function extendBoundsFromCoords(bounds, coords) {
       if (!Array.isArray(coords) || coords.length === 0) return;
-
       if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
         bounds.extend([coords[0], coords[1]]);
         return;
@@ -440,13 +460,13 @@
     }
 
     // =========================
-    // EXPRESIONES (color + opacidad + filtro)
+    // EXPRESIONES (color + opacidad “como antes”)
     // =========================
     function activeFieldForYear(year) {
       return `${YEAR_FIELD_PREFIX}${year}`;
     }
 
-    function fillColorExpression(fieldName) {
+    function colorExprForField(fieldName) {
       return [
         'match',
         ['to-number', ['get', fieldName]],
@@ -458,14 +478,25 @@
       ];
     }
 
-    // Se “vacía” el color al hacer zoom, sin desaparecer la capa (borde sigue)
-    function fillOpacityByZoom() {
+    // Relleno se “vacía” al llegar a DETAIL_ZOOM (como la versión anterior)
+    function fillOpacityExpr() {
       return [
         'interpolate', ['linear'], ['zoom'],
         0, 0.70,
-        COLOR_FADE_ZOOM - 0.1, 0.70,
-        COLOR_FADE_ZOOM, 0.00,
+        DETAIL_ZOOM - 0.1, 0.70,
+        DETAIL_ZOOM, 0.00,
         22, 0.00
+      ];
+    }
+
+    // Bordes SIEMPRE visibles; ancho como antes (interpolado)
+    function lineWidthExpr() {
+      return [
+        'interpolate', ['linear'], ['zoom'],
+        6, 0.4,
+        10, 0.8,
+        DETAIL_ZOOM, 1.2,
+        16, 1.8
       ];
     }
 
@@ -491,12 +522,12 @@
       zoom: 2
     });
 
-    // Controles discretos: zoom y escala
+    // Zoom + escala discretos
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-right');
 
     // =========================
-    // Modal inicial
+    // Modal
     // =========================
     const modalOverlay = document.getElementById('modalOverlay');
     document.getElementById('modalClose').addEventListener('click', () => {
@@ -510,7 +541,7 @@
     });
 
     // =========================
-    // Panel toggle (pestaña in/out)
+    // Toggle panel (derecha)
     // =========================
     const uiPanel = document.getElementById('uiPanel');
     const panelToggle = document.getElementById('panelToggle');
@@ -521,10 +552,10 @@
       panelOpen = open;
       if (panelOpen) {
         uiPanel.classList.remove('collapsed');
-        toggleIcon.textContent = '❮';
+        toggleIcon.textContent = '❯'; // indica “plegar hacia la derecha”
       } else {
         uiPanel.classList.add('collapsed');
-        toggleIcon.textContent = '❯';
+        toggleIcon.textContent = '❮'; // indica “desplegar hacia la izquierda”
       }
     }
     panelToggle.addEventListener('click', (e) => {
@@ -554,7 +585,7 @@
     }
 
     function ensureBasemapBelow() {
-      // Mantener WMS debajo de la capa MFV
+      // WMS debajo de MFV
       if (map.getLayer('satellite') && map.getLayer('mfv-fill')) {
         try { map.moveLayer('satellite', 'mfv-fill'); } catch (_) {}
       }
@@ -595,7 +626,7 @@
         btn.textContent = String(y);
         btn.dataset.year = String(y);
         btn.addEventListener('click', () => {
-          // IMPORTANTE: cambiar orto NO cambia el año temático
+          // IMPORTANTE: cambiar orto NO cambia año temático
           setBasemapYear(y);
           closeBasemapPanel();
         });
@@ -630,7 +661,7 @@
     updateBasemapUI(DEFAULT_YEAR);
 
     // =========================
-    // UI: barra horizontal de años (temática)
+    // UI: scrollbar (año temático)
     // =========================
     const yearSlider = document.getElementById('yearSlider');
     const yearLabel  = document.getElementById('yearLabel');
@@ -652,6 +683,9 @@
       yearLabel.textContent = String(activeYear);
     }
 
+    // =========================
+    // Leyenda filtros
+    // =========================
     function selectedClasses() {
       const toggles = Array.from(document.querySelectorAll('.class-toggle'));
       return toggles.filter(cb => cb.checked).map(cb => Number(cb.value));
@@ -666,7 +700,6 @@
 
       ['mfv-fill','mfv-line'].forEach(layerId => {
         if (!map.getLayer(layerId)) return;
-
         if (hide) {
           map.setLayoutProperty(layerId, 'visibility', 'none');
         } else {
@@ -680,37 +713,24 @@
       const fieldName = activeFieldForYear(year);
       yearLabel.textContent = String(year);
 
-      if (map.getLayer('mfv-fill')) {
-        map.setPaintProperty('mfv-fill', 'fill-color', fillColorExpression(fieldName));
-      }
+      // relleno + borde del MISMO color (como la versión anterior)
+      if (map.getLayer('mfv-fill')) map.setPaintProperty('mfv-fill', 'fill-color', colorExprForField(fieldName));
+      if (map.getLayer('mfv-line')) map.setPaintProperty('mfv-line', 'line-color', colorExprForField(fieldName));
 
       applyClassFilterForYear(year);
       ensureBasemapBelow();
     }
 
-    // =========================
-    // Leyenda (checkboxes)
-    // =========================
     function initLegendHandlers() {
       const toggles = Array.from(document.querySelectorAll('.class-toggle'));
       const allBtn = document.getElementById('allBtn');
       const noneBtn = document.getElementById('noneBtn');
 
-      function apply() {
-        applyClassFilterForYear(activeYear);
-      }
+      function apply() { applyClassFilterForYear(activeYear); }
 
       toggles.forEach(cb => cb.addEventListener('change', apply));
-
-      allBtn.addEventListener('click', () => {
-        toggles.forEach(cb => cb.checked = true);
-        apply();
-      });
-
-      noneBtn.addEventListener('click', () => {
-        toggles.forEach(cb => cb.checked = false);
-        apply();
-      });
+      allBtn.addEventListener('click', () => { toggles.forEach(cb => cb.checked = true); apply(); });
+      noneBtn.addEventListener('click', () => { toggles.forEach(cb => cb.checked = false); apply(); });
     }
 
     // =========================
@@ -720,55 +740,41 @@
       initYearSlider();
       initLegendHandlers();
 
-      // Regla pedida:
-      // - Cambiar AÑO temático => sincroniza orto a ese año automáticamente (si existe)
-      // - Cambiar orto en desplegable NO cambia el año temático
+      // Cambiar año temático => sincroniza orto a ese año (si existe)
       yearSlider.addEventListener('input', () => {
         activeYear = yearFromIndex(yearSlider.value);
         applyYearStyle(activeYear);
 
-        // Sincroniza WMS al año temático, si está disponible como ORTO_YYYY
         if (ORTO_YEARS.includes(activeYear)) {
           setBasemapYear(activeYear);
         }
       });
 
-      // Fuente MFV (única)
+      // Fuente + capas MFV (zoomout)
       map.addSource('mfv', { type: 'geojson', data: ZOOMOUT_URL });
 
-      // Capa relleno (se vacía por zoom)
       map.addLayer({
         id: 'mfv-fill',
         type: 'fill',
         source: 'mfv',
         paint: {
-          'fill-opacity': fillOpacityByZoom(),
-          'fill-color': fillColorExpression(activeFieldForYear(activeYear))
+          'fill-color': colorExprForField(activeFieldForYear(activeYear)),
+          'fill-opacity': fillOpacityExpr()
         }
       });
 
-      // Capa borde (siempre visible)
       map.addLayer({
         id: 'mfv-line',
         type: 'line',
         source: 'mfv',
         paint: {
-          'line-color': 'rgba(0,0,0,0.55)',
-          'line-width': [
-            'interpolate', ['linear'], ['zoom'],
-            6, 0.4,
-            10, 0.8,
-            13, 1.2,
-            16, 1.8
-          ],
+          'line-color': colorExprForField(activeFieldForYear(activeYear)),
+          'line-width': lineWidthExpr(),
           'line-opacity': 0.95
         }
       });
 
-      // Orden: WMS debajo de MFV
       ensureBasemapBelow();
-
-      // Estilo+filtro inicial
       applyYearStyle(activeYear);
 
       // FitBounds
