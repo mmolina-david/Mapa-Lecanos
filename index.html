@@ -12,9 +12,7 @@
     html, body { margin: 0; padding: 0; height: 100%; }
     #map { width: 100%; height: 100%; }
 
-    /* =========================
-       Leyenda + filtros
-       ========================= */
+    /* Leyenda + filtros */
     #legend {
       position: absolute;
       bottom: 30px;
@@ -25,7 +23,7 @@
       font-family: sans-serif;
       font-size: 13px;
       box-shadow: 0 0 8px rgba(0,0,0,0.2);
-      min-width: 190px;
+      min-width: 170px;
       user-select: none;
       z-index: 10;
     }
@@ -71,7 +69,7 @@
        ========================= */
     #basemapControl {
       position: absolute;
-      bottom: 260px; /* encima del #legend y del control año */
+      bottom: 210px; /* encima del #legend */
       left: 30px;
       z-index: 11;
       font-family: sans-serif;
@@ -83,7 +81,7 @@
       border-radius: 6px;
       box-shadow: 0 0 8px rgba(0,0,0,0.2);
       overflow: hidden;
-      min-width: 260px;
+      min-width: 240px;
     }
 
     .bm-button {
@@ -174,61 +172,150 @@
     }
 
     /* =========================
-       Slider vertical de años (al lado izq de la leyenda)
+       Barra de años (vertical) a la izquierda de la leyenda
        ========================= */
     #yearControl {
       position: absolute;
-      bottom: 30px;
-      left: 0px; /* se ajusta con #legend */
-      z-index: 12;
+      bottom: 30px;          /* alineado con la leyenda */
+      left: 6px;             /* un poco a la izquierda del bloque de leyenda */
+      z-index: 12;           /* por encima del WMS y de la leyenda */
       font-family: sans-serif;
       user-select: none;
-      pointer-events: none; /* solo el slider captura */
     }
 
-    #yearPill {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      transform: translateX(-68px); /* a la izquierda del legend */
+    .year-wrap {
       background: rgba(255, 255, 255, 0.92);
-      padding: 10px 10px;
       border-radius: 6px;
       box-shadow: 0 0 8px rgba(0,0,0,0.2);
-      width: 44px;
+      padding: 10px 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
-      pointer-events: auto;
+      width: 56px;
     }
 
-    #yearLabel {
-      font-weight: 700;
+    .year-label {
       font-size: 12px;
+      font-weight: 700;
       line-height: 1;
     }
 
-    /* slider vertical puro */
+    /* slider vertical “de verdad” en navegadores modernos */
     #yearSlider {
-      height: 180px;
-      width: 28px;
-      writing-mode: bt-lr;     /* IE/Edge legacy */
+      writing-mode: bt-lr; /* vertical */
       -webkit-appearance: slider-vertical;
+      width: 18px;
+      height: 220px;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
     }
 
-    /* helper texto */
-    #yearHint {
-      font-size: 11px;
-      opacity: 0.7;
-      line-height: 1.1;
-      text-align: center;
+    /* fallback: si el browser ignora writing-mode */
+    @supports not (writing-mode: bt-lr) {
+      #yearSlider {
+        width: 220px;
+        height: 18px;
+        transform: rotate(-90deg);
+      }
+    }
+
+    /* =========================
+       Pop-up de aviso (modal)
+       ========================= */
+    #devModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 18px;
+    }
+    #devModal.hidden { display: none; }
+
+    .dev-card {
+      width: min(520px, 100%);
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    .dev-head {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      font-weight: 800;
+    }
+    .dev-close {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 6px 8px;
+      border-radius: 8px;
+    }
+    .dev-close:hover { background: rgba(0,0,0,0.06); }
+
+    .dev-body {
+      padding: 14px;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .dev-actions {
+      padding: 12px 14px 14px 14px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .dev-btn {
+      border: 1px solid rgba(0,0,0,0.15);
+      background: white;
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .dev-btn.primary {
+      background: rgba(0,0,0,0.92);
+      color: white;
+      border-color: rgba(0,0,0,0.92);
     }
   </style>
 </head>
 
 <body>
   <div id="map"></div>
+
+  <!-- Pop-up de aviso -->
+  <div id="devModal" role="dialog" aria-modal="true" aria-label="Aviso de versión">
+    <div class="dev-card">
+      <div class="dev-head">
+        <div>Aviso</div>
+        <button id="devCloseX" class="dev-close" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="dev-body">
+        Esta es una versión de prueba, en fase de desarrollo, los datos que aparecen no son reales.
+      </div>
+      <div class="dev-actions">
+        <button id="devCloseBtn" class="dev-btn primary" type="button">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra vertical de años -->
+  <div id="yearControl" aria-label="Selector de año">
+    <div class="year-wrap">
+      <div class="year-label" id="yearLabel">2018</div>
+      <input id="yearSlider" type="range" min="0" max="0" step="1" value="0" />
+    </div>
+  </div>
 
   <!-- Selector de ortofoto (encima de la leyenda) -->
   <div id="basemapControl">
@@ -246,15 +333,6 @@
         <div class="bm-title">Fuente: Eusko Jaurlaritza / Gobierno Vasco. geoEuskadi</div>
         <div id="bmOptions" class="bm-options"></div>
       </div>
-    </div>
-  </div>
-
-  <!-- Control vertical de años (temático) -->
-  <div id="yearControl">
-    <div id="yearPill">
-      <div id="yearLabel">2018</div>
-      <input id="yearSlider" type="range" min="0" max="0" step="1" value="0" />
-      <div id="yearHint">Año<br/>MFV</div>
     </div>
   </div>
 
@@ -303,25 +381,21 @@
 
   <script>
     // =========================
-    // CONFIG GENERAL
+    // POP-UP (aviso)
     // =========================
-    const LOGO_URL = './data/geoeuskadi.png';
+    const devModal = document.getElementById('devModal');
+    document.getElementById('devCloseX').addEventListener('click', () => devModal.classList.add('hidden'));
+    document.getElementById('devCloseBtn').addEventListener('click', () => devModal.classList.add('hidden'));
+    devModal.addEventListener('click', (e) => { if (e.target === devModal) devModal.classList.add('hidden'); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') devModal.classList.add('hidden'); });
 
-    // Años temáticos (campos y_YYYY dentro del GeoJSON)
+    // =========================
+    // CONFIG (años + campos)
+    // =========================
     const YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024];
     const DEFAULT_YEAR = 2018;
-    const YEAR_FIELD_PREFIX = 'y_';
+    const YEAR_FIELD_PREFIX = 'y_'; // y_2018, y_2019, ...
 
-    // GeoJSON polígonos
-    // - zoomout: simplificado (tu ~50MB)
-    // - zoomin : detallado (puede ser más pesado)
-    const ZOOMOUT_URL = './data/mfv_zoomout.geojson';
-    const ZOOMIN_URL  = './data/mfv_zoomin.geojson';
-
-    // Umbral de cambio de detalle (ajústalo a tu gusto)
-    const DETAIL_ZOOM = 13;
-
-    // Colores por clase (0-3)
     const CLASS_COLORS = {
       0: '#a6d96a',
       1: '#ffffc0',
@@ -329,9 +403,28 @@
       3: '#d7191c'
     };
 
+    function fieldForYear(year) {
+      return `${YEAR_FIELD_PREFIX}${year}`;
+    }
+
+    function circleColorExpression(fieldName) {
+      return [
+        'match',
+        ['to-number', ['get', fieldName]],
+        0, CLASS_COLORS[0],
+        1, CLASS_COLORS[1],
+        2, CLASS_COLORS[2],
+        3, CLASS_COLORS[3],
+        '#ff00ff'
+      ];
+    }
+
     // =========================
-    // CONFIG WMS geoEuskadi (RGB)
+    // CONFIG (selector orto)
     // =========================
+    const LOGO_URL = './data/geoeuskadi.png';
+
+    // Solo RGB (no IrRG). Capas geoeuskadi: ORTO_YYYY
     const ORTO_YEARS = [
       2024, 2023, 2022, 2021, 2020, 2019, 2018,
       2017, 2016, 2015, 2014, 2013, 2012, 2011,
@@ -352,76 +445,21 @@
     }
 
     // =========================
-    // HELPERS (bounds polígonos)
-    // =========================
-    function extendBoundsFromCoords(bounds, coords) {
-      // coords: array anidado de posiciones [lng,lat]
-      // soporta Polygon y MultiPolygon en cualquier profundidad razonable
-      if (!Array.isArray(coords)) return;
-      if (coords.length === 0) return;
-
-      // Si parece un punto [lng,lat]
-      if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
-        bounds.extend([coords[0], coords[1]]);
-        return;
-      }
-
-      // Si es array anidado, recurre
-      coords.forEach(c => extendBoundsFromCoords(bounds, c));
-    }
-
-    function fitToGeoJSON(geojson) {
-      const bounds = new maplibregl.LngLatBounds();
-      let any = false;
-
-      (geojson.features || []).forEach(f => {
-        if (!f || !f.geometry) return;
-        const g = f.geometry;
-        if (!g.coordinates) return;
-        extendBoundsFromCoords(bounds, g.coordinates);
-        any = true;
-      });
-
-      if (any) {
-        map.fitBounds(bounds, { padding: 40, maxZoom: 16 });
-      }
-    }
-
-    // =========================
-    // EXPRESIONES (color + filtro)
-    // =========================
-    function activeFieldForYear(year) {
-      return `${YEAR_FIELD_PREFIX}${year}`; // y_2018...
-    }
-
-    function fillColorExpression(fieldName) {
-      return [
-        'match',
-        ['to-number', ['get', fieldName]],
-        0, CLASS_COLORS[0],
-        1, CLASS_COLORS[1],
-        2, CLASS_COLORS[2],
-        3, CLASS_COLORS[3],
-        'rgba(0,0,0,0)' // fuera de rango/nulo -> transparente
-      ];
-    }
-
-    // =========================
-    // MAPA (WMS 2018 por defecto)
+    // MAPA (fondo WMS 2018 por defecto)
     // =========================
     const map = new maplibregl.Map({
       container: 'map',
       style: {
-        version: 8,
-        sources: {
-          satellite: {
-            type: 'raster',
-            tiles: [ wmsTileUrlForYear(DEFAULT_YEAR) ],
-            tileSize: 256
+        "version": 8,
+        "sources": {
+          "satellite": {
+            "type": "raster",
+            "tiles": [ wmsTileUrlForYear(DEFAULT_YEAR) ],
+            "tileSize": 256
           }
         },
-        layers: [
-          { id: 'satellite', type: 'raster', source: 'satellite' }
+        "layers": [
+          { "id": "satellite", "type": "raster", "source": "satellite" }
         ]
       },
       center: [0, 0],
@@ -429,13 +467,14 @@
     });
 
     // =========================
-    // UI: selector WMS
+    // UI: selector orto
     // =========================
     const bmBtn = document.getElementById('bmBtn');
     const bmPanel = document.getElementById('bmPanel');
     const bmOptions = document.getElementById('bmOptions');
     const bmYearLabel = document.getElementById('bmYearLabel');
     const bmLogo = document.getElementById('bmLogo');
+
     bmLogo.src = LOGO_URL;
 
     let selectedOrtoYear = DEFAULT_YEAR;
@@ -448,43 +487,36 @@
       });
     }
 
-    function ensureBasemapBelow() {
-      // Mantener WMS abajo del todo, y MFV por encima
-      const firstMfvLayer = map.getLayer('mfv_zoomout-fill') ? 'mfv_zoomout-fill'
-                        : map.getLayer('mfv_zoomin-fill') ? 'mfv_zoomin-fill'
-                        : null;
-
-      if (firstMfvLayer && map.getLayer('satellite')) {
-        try { map.moveLayer('satellite', firstMfvLayer); } catch (_) {}
-      }
-    }
-
     function setBasemapYear(year) {
       selectedOrtoYear = year;
       updateBasemapUI(year);
 
-      const tiles = [ wmsTileUrlForYear(year) ];
-
+      const tiles = [wmsTileUrlForYear(year)];
       const src = map.getSource('satellite');
+
       if (src && typeof src.setTiles === 'function') {
         src.setTiles(tiles);
-        ensureBasemapBelow();
+        if (map.getLayer('puntos-layer')) {
+          try { map.moveLayer('puntos-layer'); } catch (_) {}
+        }
         return;
       }
 
-      // Fallback: recrear SOLO el fondo
+      // Fallback robusto: re-crear SOLO el fondo (sin tocar puntos)
       if (map.getLayer('satellite')) map.removeLayer('satellite');
       if (map.getSource('satellite')) map.removeSource('satellite');
 
       map.addSource('satellite', { type: 'raster', tiles, tileSize: 256 });
 
-      // Si ya existen capas MFV, insertarlo debajo; si no, lo añade normal
-      const before = map.getLayer('mfv_zoomout-fill') ? 'mfv_zoomout-fill'
-                  : map.getLayer('mfv_zoomin-fill') ? 'mfv_zoomin-fill'
-                  : undefined;
-
-      if (before) map.addLayer({ id: 'satellite', type: 'raster', source: 'satellite' }, before);
-      else map.addLayer({ id: 'satellite', type: 'raster', source: 'satellite' });
+      if (map.getLayer('puntos-layer')) {
+        map.addLayer(
+          { id: 'satellite', type: 'raster', source: 'satellite' },
+          'puntos-layer'
+        );
+        try { map.moveLayer('puntos-layer'); } catch (_) {}
+      } else {
+        map.addLayer({ id: 'satellite', type: 'raster', source: 'satellite' });
+      }
     }
 
     function renderBasemapOptions() {
@@ -520,6 +552,7 @@
       e.stopPropagation();
       toggleBasemapPanel();
     });
+
     document.addEventListener('click', () => closeBasemapPanel());
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeBasemapPanel();
@@ -529,194 +562,131 @@
     updateBasemapUI(DEFAULT_YEAR);
 
     // =========================
-    // UI: slider vertical de años (temático)
+    // UI: barra vertical de años
     // =========================
     const yearSlider = document.getElementById('yearSlider');
-    const yearLabel  = document.getElementById('yearLabel');
+    const yearLabel = document.getElementById('yearLabel');
 
     function yearFromIndex(i) {
-      const idx = Math.max(0, Math.min(YEARS.length - 1, Number(i)));
-      return YEARS[idx];
+      return YEARS[Math.max(0, Math.min(YEARS.length - 1, Number(i)))];
+    }
+    function activeYear() {
+      return yearFromIndex(yearSlider.value);
+    }
+    function activeField() {
+      return fieldForYear(activeYear());
     }
 
-    let activeYear = DEFAULT_YEAR;
-
-    function initYearSlider() {
-      yearSlider.min = 0;
-      yearSlider.max = String(YEARS.length - 1);
-      yearSlider.step = 1;
-      yearSlider.value = String(YEARS.indexOf(DEFAULT_YEAR) >= 0 ? YEARS.indexOf(DEFAULT_YEAR) : 0);
-      activeYear = yearFromIndex(yearSlider.value);
-      yearLabel.textContent = String(activeYear);
-    }
+    // =========================
+    // Leyenda / filtros por clase
+    // =========================
+    const toggles = Array.from(document.querySelectorAll('.class-toggle'));
+    const allBtn = document.getElementById('allBtn');
+    const noneBtn = document.getElementById('noneBtn');
 
     function selectedClasses() {
-      const toggles = Array.from(document.querySelectorAll('.class-toggle'));
       return toggles.filter(cb => cb.checked).map(cb => Number(cb.value));
     }
 
-    function applyClassFilterForYear(year) {
-      const fieldName = activeFieldForYear(year);
+    function applyClassFilter() {
+      if (!map.getLayer('puntos-layer')) return;
+
       const selected = selectedClasses();
+      const fieldName = activeField();
 
-      const filter = (selected.length === 0)
-        ? null
-        : ['in', ['to-number', ['get', fieldName]], ['literal', selected]];
-
-      // Si no hay seleccionadas, escondemos ambas capas fill (y sus líneas)
-      const hide = (selected.length === 0);
-
-      ['mfv_zoomout-fill','mfv_zoomout-line','mfv_zoomin-fill','mfv_zoomin-line'].forEach(layerId => {
-        if (!map.getLayer(layerId)) return;
-
-        if (hide) {
-          map.setLayoutProperty(layerId, 'visibility', 'none');
-        } else {
-          map.setLayoutProperty(layerId, 'visibility', 'visible');
-          // Aplica filtro solo a fills; a lines le aplicamos el mismo para que coincidan
-          map.setFilter(layerId, filter);
-        }
-      });
-    }
-
-    function applyYearStyle(year) {
-      const fieldName = activeFieldForYear(year);
-      yearLabel.textContent = String(year);
-
-      // Cambiar color de relleno en ambas escalas
-      if (map.getLayer('mfv_zoomout-fill')) {
-        map.setPaintProperty('mfv_zoomout-fill', 'fill-color', fillColorExpression(fieldName));
-      }
-      if (map.getLayer('mfv_zoomin-fill')) {
-        map.setPaintProperty('mfv_zoomin-fill', 'fill-color', fillColorExpression(fieldName));
+      // Si no hay ninguna seleccionada: apaga capa
+      if (selected.length === 0) {
+        map.setLayoutProperty('puntos-layer', 'visibility', 'none');
+        return;
       }
 
-      applyClassFilterForYear(year);
-      ensureBasemapBelow();
+      map.setLayoutProperty('puntos-layer', 'visibility', 'visible');
+      map.setFilter('puntos-layer', [
+        'in',
+        ['to-number', ['get', fieldName]],
+        ['literal', selected]
+      ]);
     }
 
-    // =========================
-    // Leyenda (checkboxes)
-    // =========================
-    function initLegendHandlers() {
-      const toggles = Array.from(document.querySelectorAll('.class-toggle'));
-      const allBtn = document.getElementById('allBtn');
-      const noneBtn = document.getElementById('noneBtn');
+    function applyYearStyle() {
+      if (!map.getLayer('puntos-layer')) return;
 
-      function apply() {
-        applyClassFilterForYear(activeYear);
-      }
+      const y = activeYear();
+      const fieldName = activeField();
 
-      toggles.forEach(cb => cb.addEventListener('change', apply));
+      yearLabel.textContent = String(y);
 
-      allBtn.addEventListener('click', () => {
-        toggles.forEach(cb => cb.checked = true);
-        apply();
-      });
-
-      noneBtn.addEventListener('click', () => {
-        toggles.forEach(cb => cb.checked = false);
-        apply();
-      });
+      map.setPaintProperty('puntos-layer', 'circle-color', circleColorExpression(fieldName));
+      applyClassFilter();
     }
 
+    toggles.forEach(cb => cb.addEventListener('change', applyClassFilter));
+
+    allBtn.addEventListener('click', () => {
+      toggles.forEach(cb => cb.checked = true);
+      applyClassFilter();
+    });
+
+    noneBtn.addEventListener('click', () => {
+      toggles.forEach(cb => cb.checked = false);
+      applyClassFilter();
+    });
+
+    // Slider (vertical) cambia el año -> cambia estilos y filtros
+    yearSlider.addEventListener('input', applyYearStyle);
+
     // =========================
-    // CARGA: fuentes MFV + capas (polígonos)
+    // CARGA puntos + zoom a la capa
     // =========================
     map.on('load', async () => {
-      // 1) Inicializa slider + handlers
-      initYearSlider();
-      initLegendHandlers();
+      // Inicializa slider a DEFAULT_YEAR
+      yearSlider.min = 0;
+      yearSlider.max = String(YEARS.length - 1);
+      yearSlider.step = 1;
+      yearSlider.value = String(Math.max(0, YEARS.indexOf(DEFAULT_YEAR)));
+      yearLabel.textContent = String(activeYear());
 
-      yearSlider.addEventListener('input', () => {
-        activeYear = yearFromIndex(yearSlider.value);
-        applyYearStyle(activeYear);
+      const url = './data/muestra_wgs.geojson';
+
+      map.addSource('puntos', {
+        type: 'geojson',
+        data: url
       });
 
-      // 2) Añade fuentes
-      map.addSource('mfv_zoomout', { type: 'geojson', data: ZOOMOUT_URL });
-      map.addSource('mfv_zoomin',  { type: 'geojson', data: ZOOMIN_URL  });
+      // Centrar el mapa en la extensión de la capa (puntos)
+      const response = await fetch(url);
+      const geojson = await response.json();
 
-      // 3) Capas zoom-out (fill + line)
+      const bounds = new maplibregl.LngLatBounds();
+      geojson.features.forEach(f => {
+        if (f.geometry && f.geometry.type === 'Point') {
+          bounds.extend(f.geometry.coordinates);
+        }
+      });
+      map.fitBounds(bounds, { padding: 40, maxZoom: 16 });
+
+      // Capa de puntos (usa el campo del año activo: y_2018, y_2019, ...)
       map.addLayer({
-        id: 'mfv_zoomout-fill',
-        type: 'fill',
-        source: 'mfv_zoomout',
-        maxzoom: DETAIL_ZOOM, // visible hasta justo antes del detallado
+        id: 'puntos-layer',
+        type: 'circle',
+        source: 'puntos',
         paint: {
-          'fill-opacity': 0.70,
-          'fill-color': fillColorExpression(activeFieldForYear(activeYear))
+          'circle-radius': 6,
+          'circle-opacity': 1,
+          'circle-stroke-width': 0.5,
+          'circle-stroke-color': '#000000',
+          'circle-color': circleColorExpression(activeField())
         }
       });
 
-      map.addLayer({
-        id: 'mfv_zoomout-line',
-        type: 'line',
-        source: 'mfv_zoomout',
-        maxzoom: DETAIL_ZOOM,
-        paint: {
-          'line-color': 'rgba(0,0,0,0.45)',
-          'line-width': [
-            'interpolate', ['linear'], ['zoom'],
-            5, 0.2,
-            10, 0.6,
-            12.5, 1.0
-          ],
-          'line-opacity': 0.8
-        }
-      });
-
-      // 4) Capas zoom-in (fill + line)
-      map.addLayer({
-        id: 'mfv_zoomin-fill',
-        type: 'fill',
-        source: 'mfv_zoomin',
-        minzoom: DETAIL_ZOOM,
-        paint: {
-          'fill-opacity': 0.70,
-          'fill-color': fillColorExpression(activeFieldForYear(activeYear))
-        }
-      });
-
-      map.addLayer({
-        id: 'mfv_zoomin-line',
-        type: 'line',
-        source: 'mfv_zoomin',
-        minzoom: DETAIL_ZOOM,
-        paint: {
-          'line-color': 'rgba(0,0,0,0.55)',
-          'line-width': [
-            'interpolate', ['linear'], ['zoom'],
-            DETAIL_ZOOM, 0.8,
-            15, 1.4,
-            17, 2.0
-          ],
-          'line-opacity': 0.9
-        }
-      });
-
-      // 5) Asegura orden: WMS debajo, MFV encima
-      ensureBasemapBelow();
-
-      // 6) Aplica estilo+filtro inicial
-      applyYearStyle(activeYear);
-
-      // 7) FitBounds (usa zoomout por ser más ligero; si no, fallback a zoomin)
-      try {
-        const r = await fetch(ZOOMOUT_URL);
-        if (r.ok) {
-          const gj = await r.json();
-          fitToGeoJSON(gj);
-        } else {
-          const r2 = await fetch(ZOOMIN_URL);
-          if (r2.ok) {
-            const gj2 = await r2.json();
-            fitToGeoJSON(gj2);
-          }
-        }
-      } catch (_) {
-        // si falla el fetch, al menos no rompe el visor
+      // Asegura que el fondo quede debajo (puntos arriba)
+      if (map.getLayer('satellite') && map.getLayer('puntos-layer')) {
+        try { map.moveLayer('satellite', 'puntos-layer'); } catch (_) {}
+        try { map.moveLayer('puntos-layer'); } catch (_) {}
       }
+
+      // Aplica estado inicial (año + filtros)
+      applyYearStyle();
     });
   </script>
 </body>
